@@ -130,7 +130,7 @@ class QuantizableDense(mx.gluon.HybridBlock):
             #No casting an already quantized matrix.
             logger.warning("Ignoring casting on int8 matrix")
 
-    def hybrid_forward(self, F, x, weight, scaling = None, bias=None):
+    def hybrid_forward(self, F, x, weight, scaling = None, bias = None):
         if self._dtype == C.DTYPE_INT8:
             if bias is not None:
                 act = F.contrib.intgemm_fully_connected(x, weight, scaling, bias, no_bias=False, num_hidden=self._units,
