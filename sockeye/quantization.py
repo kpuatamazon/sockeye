@@ -155,11 +155,14 @@ class QuantizableDense(mx.gluon.HybridBlock):
                         layout='{0} -> {1}'.format(shape[1] if shape[1] else None, shape[0]))
 
 
-#Minimize mean squared error of quantizing a tensor, returning the top value
-#(i.e. the one that quantizes to 127).  Scaling = 127.0 / return value.
 def optimize_quantization_mse(tensor, rounds = 10):
-    #This is a convex optimization problem.  EM works but makes slow steps.
-    #Instead of EM, use binary search in the direction minimization suggests.
+    """
+    Minimize mean squared error of quantizing a tensor, returning the top value
+    (i.e. the one that quantizes to 127).  Scaling = 127.0 / return value.
+
+    This is a convex optimization problem.  EM works but makes slow steps.
+    Instead of EM, use binary search in the direction that minimizes loss.
+    """
     best_mse = math.inf
     best_top = None
     maxabs = mx.nd.contrib.intgemm_maxabsolute(tensor)
@@ -191,10 +194,11 @@ def extract_quant_max(tensor_param: mx.gluon.parameter.Parameter, scaling_param:
      """
      scaling = scaling_param.data()
      if scaling.asscalar() < 0:
-         #Bogus auto initialized scaling factor.
+         #Bogus auto initialized scaling factor: need to tune it.
          b_max = optimize_quantization_mse(tensor_param.data())
          scaling_param.set_data(b_max / 127.0)
      else:
+         #Use scaling factor from file.
          b_max = scaling * 127.0
      return b_max
 
